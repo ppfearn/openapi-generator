@@ -101,6 +101,15 @@ public class StubreenaCodegen extends AbstractJavaCodegen
         // spring uses the jackson lib
         additionalProperties.put("jackson", "true");
         additionalProperties.put("stubsTest", "This is a test");
+        Map<String, String> collectionsMap = new HashMap<>();
+        collectionsMap.put("BillingAccount", "billing-accounts");
+        collectionsMap.put("nullValue", null);
+        // Hopefully we can read from a map in additional properties by {{classname}}
+        additionalProperties.put("collectionsMap", collectionsMap);
+        
+        // Otherwise might need to try and read from individual properties {{classname}}-collection - but not looking good
+        additionalProperties.put("BillingAccount-collection", "billing-accounts");
+        
 
         cliOptions.add(new CliOption(TITLE, "server title name or client service name"));
         cliOptions.add(new CliOption(CONFIG_PACKAGE, "configuration package for generated code"));
