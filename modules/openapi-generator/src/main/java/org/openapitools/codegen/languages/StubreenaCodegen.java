@@ -726,6 +726,10 @@ public class StubreenaCodegen extends AbstractJavaCodegen
         if ("null".equals(property.example)) {
             property.example = null;
         }
+        
+        if ("MobileSubscriptionBilling".equals(property.complexType)) {
+        	property.vendorExtensions.put("x-is-mongo-dbref", true);
+        }
 
         //Add imports for Jackson
         if (!Boolean.TRUE.equals(model.isEnum)) {
