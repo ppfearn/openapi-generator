@@ -91,12 +91,45 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     protected boolean returnSuccessCode = false;
     
     static class MongoProperty {
-    	String name;
+    	
+		String name;
     	String accountType;
+    	
     	@Override
     	public String toString() {
     		return "name: " + name + " accountType: " + accountType;
     	}
+    	
+    	@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((accountType == null) ? 0 : accountType.hashCode());
+			result = prime * result + ((name == null) ? 0 : name.hashCode());
+			return result;
+		}
+    	
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			MongoProperty other = (MongoProperty) obj;
+			if (accountType == null) {
+				if (other.accountType != null)
+					return false;
+			} else if (!accountType.equals(other.accountType))
+				return false;
+			if (name == null) {
+				if (other.name != null)
+					return false;
+			} else if (!name.equals(other.name))
+				return false;
+			return true;
+		}
     }
     
     private Map<String, String> mongoCollections = new HashMap<>();
@@ -113,6 +146,13 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     	apiEndpoints.put("Person", "person-identities");
     }
     
+    private Map<String, String> modelClassMappings = new HashMap<>();
+    
+    {
+    	modelClassMappings.put("MobileSubscriptionPerson", "MobileSubscription");
+    	modelClassMappings.put("MobileSubscriptionBilling", "MobileSubscription");
+    	modelClassMappings.put("BillingAccountPerson", "BillingAccount");
+    }
     
     
     private List<String> nestedMongoTypes = new ArrayList<>();
@@ -782,6 +822,18 @@ public class StubreenaCodegen extends AbstractJavaCodegen
                 model.imports.add("JsonCreator");
             }
         }
+        
+        for (CodegenProperty codegenProperty : model.getVars()) {
+			if ("Link".equals(codegenProperty.complexType)) {
+				model.vendorExtensions.put("x-is-link-container", true);
+				break;
+			}
+			
+			if (modelClassMappings.containsKey(codegenProperty.complexType)) {
+				codegenProperty.datatypeWithEnum = codegenProperty.datatypeWithEnum.replace(codegenProperty.complexType, modelClassMappings.get(codegenProperty.complexType));
+				codegenProperty.complexType = modelClassMappings.get(codegenProperty.complexType);
+			}
+		}
     }
 
     @Override
@@ -864,7 +916,9 @@ public class StubreenaCodegen extends AbstractJavaCodegen
             		mongoProperty.accountType = (String)operation.vendorExtensions.get("x-account-type");
             		mongoProperty.name = operation.returnType;
 //            		System.out.println("Adding mongoProperty: " + mongoProperty.name + " for ops: " +  tagName);
-            		existingMongoProperties.add(mongoProperty);
+            		if (!existingMongoProperties.contains(mongoProperty)) {
+            			existingMongoProperties.add(mongoProperty);
+            		}
                 }
             }
         }
