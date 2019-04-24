@@ -899,7 +899,10 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
         // apis
         List<Object> allOperations = new ArrayList<Object>();
         generateApis(files, allOperations, allModels);
-
+        
+        // regenerate models
+        generateModels(files, allModels, filteredSchemas);
+        
         // supporting files
         Map<String, Object> bundle = buildSupportFileBundle(allOperations, allModels);
         generateSupportingFiles(files, bundle);

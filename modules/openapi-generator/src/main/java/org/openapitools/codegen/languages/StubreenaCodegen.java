@@ -18,6 +18,8 @@
 package org.openapitools.codegen.languages;
 
 import com.samskivert.mustache.Mustache;
+
+import io.swagger.v3.oas.annotations.tags.Tags;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
@@ -87,7 +89,40 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     protected boolean virtualService = false;
     protected boolean hateoas = false;
     protected boolean returnSuccessCode = false;
-
+    
+    static class MongoProperty {
+    	String name;
+    	String accountType;
+    	@Override
+    	public String toString() {
+    		return "name: " + name + " accountType: " + accountType;
+    	}
+    }
+    
+    private Map<String, String> mongoCollections = new HashMap<>();
+    
+    {
+    	mongoCollections.put("BillingAccount", "billing-accounts");
+    }
+    
+    private Map<String, String> apiEndpoints = new HashMap<>();
+    
+    {
+    	apiEndpoints.put("BillingAccount", "billing-account");
+    	apiEndpoints.put("MobileSubscription", "mobile-subscription");
+    	apiEndpoints.put("Person", "person-identities");
+    }
+    
+    
+    
+    private List<String> nestedMongoTypes = new ArrayList<>();
+    
+    {
+    	nestedMongoTypes.add("MobileSubscriptionBilling");
+    }
+    
+    private Map<String, List<MongoProperty>> nestedMongoProperties = new HashMap<>();
+    
     public StubreenaCodegen() {
         super();
         outputFolder = "generated-code/javaSpring";
@@ -505,11 +540,14 @@ public class StubreenaCodegen extends AbstractJavaCodegen
 
     @Override
     public Map<String, Object> postProcessOperationsWithModels(Map<String, Object> objs, List<Object> allModels) {
-        Map<String, Object> operations = (Map<String, Object>) objs.get("operations");
+    	// first get mongo properties from operations
+    	addMogoPropertiesFromOperations(objs);
+    	
+    	Map<String, Object> operations = (Map<String, Object>) objs.get("operations");
         if (operations != null) {
             List<CodegenOperation> ops = (List<CodegenOperation>) operations.get("operation");
             for (final CodegenOperation operation : ops) {
-                List<CodegenResponse> responses = operation.responses;
+            	List<CodegenResponse> responses = operation.responses;
                 if (responses != null) {
                     for (final CodegenResponse resp : responses) {
                         if ("0".equals(resp.code)) {
@@ -727,8 +765,8 @@ public class StubreenaCodegen extends AbstractJavaCodegen
             property.example = null;
         }
         
-        if ("MobileSubscriptionBilling".equals(property.complexType)) {
-        	property.vendorExtensions.put("x-is-mongo-dbref", true);
+        if (nestedMongoTypes.contains(property.complexType)) {
+        	property.vendorExtensions.put("x-is-visible-mongo-dbref", true);
         }
 
         //Add imports for Jackson
@@ -783,16 +821,74 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     
     @Override
     public Map<String, Object> postProcessModels(Map<String, Object> objs) {
+//    	System.out.println("XXX: postProcessModels");
     	Map<String, Object> returnObjs = super.postProcessModels(objs);
     	List<Object> models = (List<Object>) returnObjs.get("models");
         for (Object _mo : models) {
             Map<String, Object> mo = (Map<String, Object>) _mo;
             CodegenModel cm = (CodegenModel) mo.get("model");
-            if (cm.classname.equals("BillingAccount")) {
+            if (mongoCollections.containsKey(cm.classname)) {
             	cm.vendorExtensions.put("x-is-mongo-document", true);
-            	cm.vendorExtensions.put("x-mongo-collection", "billing-accounts");	
+            	cm.vendorExtensions.put("x-mongo-collection", mongoCollections.get(cm.classname));	
+            }
+            
+//            System.out.println("Checking model: " + cm.classname + " against: " + apiEndpoints);
+            if (apiEndpoints.containsKey(cm.classname)) {
+            	String apiEndpoint = apiEndpoints.get(cm.classname);
+            	System.out.println("Got a matching endpoint: " + apiEndpoint);
+            	List<MongoProperty> mongoProperties = nestedMongoProperties.get(apiEndpoint);
+            	if (mongoProperties != null) {
+            		System.out.println("Got mongoProperties for " + cm.classname);
+            		for (MongoProperty mongoProperty : mongoProperties) {
+            			addMongoProperty(mongoProperty, cm);
+            		}
+            	}
             }
         }
     	return returnObjs;
     }
+    
+    private void addMogoPropertiesFromOperations(Map<String, Object> objs) {
+    	Map<String, Object> operations = (Map<String, Object>) objs.get("operations");
+        if (operations != null) {
+            List<CodegenOperation> ops = (List<CodegenOperation>) operations.get("operation");
+            for (final CodegenOperation operation : ops) {
+                if (operation.httpMethod.equals("GET") && operation.tags.size() > 0) {
+                	String tagName = operation.tags.get(0).getName();
+                	List<MongoProperty> existingMongoProperties = nestedMongoProperties.get(tagName);
+                	if (existingMongoProperties == null) {
+                		existingMongoProperties = new ArrayList<>();
+                		nestedMongoProperties.put(tagName, existingMongoProperties);
+                	}
+                	MongoProperty mongoProperty = new MongoProperty();
+            		mongoProperty.accountType = (String)operation.vendorExtensions.get("x-account-type");
+            		mongoProperty.name = operation.returnType;
+//            		System.out.println("Adding mongoProperty: " + mongoProperty.name + " for ops: " +  tagName);
+            		existingMongoProperties.add(mongoProperty);
+                }
+            }
+        }
+    	
+    }
+
+	private void addMongoProperty(MongoProperty mongoProperty, CodegenModel cm) {
+		if (mongoProperty.name == null || mongoProperty.name.length() == 0) {
+			return;
+		}
+		CodegenProperty property = new CodegenProperty();
+		property.vendorExtensions.put("x-is-hidden-mongo-dbref", true);
+		property.baseName = camelize(mongoProperty.name, true);
+		property.name = property.baseName;
+		property.datatypeWithEnum = mongoProperty.name;
+		
+		if ("paym".equals(mongoProperty.accountType)) {
+			property.vendorExtensions.put("x-is-paym-property", true);
+		} else if ("payg".equals(mongoProperty.accountType)) {
+			property.vendorExtensions.put("x-is-payg-property", true);
+		}
+		property.getter = "get" + mongoProperty.name;
+		property.setter = "set" + mongoProperty.name;
+		cm.vars.add(property);
+		
+	}
 }
