@@ -136,6 +136,26 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     
     {
     	mongoCollections.put("BillingAccount", "billing-accounts");
+    	
+    	
+    	
+    	// Dave's additions
+    	
+    	
+//    	mongoCollections.put("??", "credit-cards"); 
+    	mongoCollections.put("Rollover", "rollover");
+//    	mongoCollections.put("SecurityQuestionAssociation", "security-answers");
+    	mongoCollections.put("SpendLimits", "spend-limits");
+    	mongoCollections.put("MobileSubscription", "mobile-subscriptions");
+    	mongoCollections.put("SubscriptionControls", "subscription-control");
+    	mongoCollections.put("Topups", "topups");
+    	mongoCollections.put("InsideAllowanceItemsUnbilled", "unbilled-inside-allowance-items");
+    	mongoCollections.put("InsideAllowanceSummariesUnbilled", "unbilled-inside-allowance-summaries");
+    	mongoCollections.put("OutsideAllowanceItemsUnbilled", "unbilled-outside-allowance-items");
+    	mongoCollections.put("OutsideAllowanceSummariesUnbilled", "unbilled-outside-allowance-summaries");
+    	mongoCollections.put("UnbilledUsage", "unbilled-usage");
+    	mongoCollections.put("UpgradeEligibility", "upgrade-eligibility");
+    	
     }
     
     private Map<String, String> apiEndpoints = new HashMap<>();
