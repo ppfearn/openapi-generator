@@ -17,14 +17,32 @@
 
 package org.openapitools.codegen.languages;
 
-import com.samskivert.mustache.Mustache;
+import static org.openapitools.codegen.utils.StringUtils.camelize;
 
-import io.swagger.v3.oas.annotations.tags.Tags;
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.Operation;
-import io.swagger.v3.oas.models.PathItem;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.stream.Collectors;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.openapitools.codegen.*;
+import org.openapitools.codegen.CliOption;
+import org.openapitools.codegen.CodegenConstants;
+import org.openapitools.codegen.CodegenModel;
+import org.openapitools.codegen.CodegenOperation;
+import org.openapitools.codegen.CodegenParameter;
+import org.openapitools.codegen.CodegenProperty;
+import org.openapitools.codegen.CodegenResponse;
+import org.openapitools.codegen.CodegenSecurity;
+import org.openapitools.codegen.CodegenType;
+import org.openapitools.codegen.SupportingFile;
 import org.openapitools.codegen.languages.features.BeanValidationFeatures;
 import org.openapitools.codegen.languages.features.OptionalFeatures;
 import org.openapitools.codegen.languages.features.PerformBeanValidationFeatures;
@@ -32,13 +50,13 @@ import org.openapitools.codegen.utils.URLPathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.net.URL;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.stream.Collectors;
+import com.samskivert.mustache.Mustache;
+import com.samskivert.mustache.MustacheException;
+import com.samskivert.mustache.Template;
 
-import static org.openapitools.codegen.utils.StringUtils.camelize;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.PathItem;
 
 public class StubreenaCodegen extends AbstractJavaCodegen
         implements BeanValidationFeatures, PerformBeanValidationFeatures,
@@ -90,6 +108,11 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     protected boolean hateoas = false;
     protected boolean returnSuccessCode = false;
     
+    // Stubreena specific config 
+    
+    // A mongo property definition. These are generated on the fly when operations
+    // are read in addMongoPropertiesFromOperations and used to auto-generate properties
+    // on models in postProcessModels
     static class MongoProperty {
     	
 		String name;
@@ -132,8 +155,20 @@ public class StubreenaCodegen extends AbstractJavaCodegen
 		}
     }
     
+    // Any model in this list will not result in a mongo collection
+    // By default any model returned from operations will result in a @Document(collection="xxx") being
+    // generated. However some classes have "containers" and these are the models that should
+    // be associated to a mongo collection, not the contained model. 
+    // Typically this is for multiple responses that re required according to some request parameter,
+    // for example bill resources are requested by sequence number and this requires map as a wrapper.
+    private List<String> exclusionsFromMongoCollections = new ArrayList<>();
+    {
+    	exclusionsFromMongoCollections.add("BillSummary");
+    }
+    
     private Map<String, String> mongoCollections = new HashMap<>();
-    /*
+    /* These static definitions are not required as they are automatically added when the 
+     * The operations are read by a call to the addMongoPropertiesFromOperations method
     {
     	mongoCollections.put("BillingAccount", "billing-accounts");
     	mongoCollections.put("AddOns", "addons");
@@ -192,6 +227,11 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     }
     */
     
+    // List of endpoints or apis to be generated.
+    // This allows any resources to be added to the "parent" model as a
+    // Dbref in mongo models if the resource matches the operation "tag"
+    // So all models with a tag of "mobile-subscription" for example will
+    // be added as Dbref (JsonIgnore) properties on MobileSubscription
     private Map<String, String> apiEndpoints = new HashMap<>();
     
     {
@@ -200,6 +240,8 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     	apiEndpoints.put("Person", "person-identities");
     }
     
+    // A map of generated class names to stubreena class names
+    // And entries will change the name of the generated class reference
     private Map<String, String> modelClassMappings = new HashMap<>();
     
     {
@@ -209,10 +251,21 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     }
     
     
+    // A list of nested mongo types that are Dbrefs in mongo, but must also
+    // be visible in the response and not ignores. For example
+    // Subscriptions in accounts and Accounts in Person
     private List<String> nestedMongoTypes = new ArrayList<>();
     
     {
     	nestedMongoTypes.add("MobileSubscriptionBilling");
+    }
+    
+    // Map of static models that api cannot generate that are specific to subs
+    // typically these are a container for bill resources that are stored in 
+    // mongo and keyed in a "mp" lookup against bill-sequence-number
+    private Map<String, String> staticModelsMap = new HashMap<>();
+    {
+    	staticModelsMap.put("BillSummaryContainer.java", "billSummaryContainer.mustache");
     }
     
     private Map<String, List<MongoProperty>> nestedMongoProperties = new HashMap<>();
@@ -547,6 +600,7 @@ public class StubreenaCodegen extends AbstractJavaCodegen
                 (Mustache.Lambda) (fragment, writer) -> writer.write(fragment.execute().replaceAll("\"", Matcher.quoteReplacement("\\\""))));
         additionalProperties.put("lambdaRemoveLineBreak",
                 (Mustache.Lambda) (fragment, writer) -> writer.write(fragment.execute().replaceAll("\\r|\\n", "")));
+        
     }
 
     @Override
@@ -910,6 +964,20 @@ public class StubreenaCodegen extends AbstractJavaCodegen
         }
 
         return objs;
+        
+    }
+    
+    private void writeStaticTemplates() throws MustacheException, IOException {
+    	// write out static templates
+        Mustache.Compiler compiler = Mustache.compiler();
+        compiler = processCompiler(compiler);
+        
+        for (Map.Entry<String, String> templateMap : staticModelsMap.entrySet()) {
+        	String template = FileUtils.readFileToString(new File(templateDir,  templateMap.getValue()));
+            Template tmpl = compiler.compile(template);
+            FileUtils.write(new File(modelFileFolder() + File.separator + templateMap.getKey()), tmpl.execute(new HashMap()));
+        }
+        
     }
 
     public void setUseBeanValidation(boolean useBeanValidation) {
@@ -933,7 +1001,7 @@ public class StubreenaCodegen extends AbstractJavaCodegen
         for (Object _mo : models) {
             Map<String, Object> mo = (Map<String, Object>) _mo;
             CodegenModel cm = (CodegenModel) mo.get("model");
-            if (mongoCollections.containsKey(cm.classname)) {
+            if (!exclusionsFromMongoCollections.contains(cm.classname) && mongoCollections.containsKey(cm.classname)) {
             	cm.vendorExtensions.put("x-is-mongo-document", true);
             	cm.vendorExtensions.put("x-mongo-collection", mongoCollections.get(cm.classname));	
             }
@@ -951,6 +1019,13 @@ public class StubreenaCodegen extends AbstractJavaCodegen
             	}
             }
         }
+        
+        try {
+        	writeStaticTemplates();
+        } catch (Exception e) {
+        	e.printStackTrace();
+        }
+        
     	return returnObjs;
     }
     
@@ -1003,4 +1078,5 @@ public class StubreenaCodegen extends AbstractJavaCodegen
 		cm.vars.add(property);
 		
 	}
+	
 }
