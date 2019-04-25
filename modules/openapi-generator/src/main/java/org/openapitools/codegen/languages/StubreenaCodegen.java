@@ -133,7 +133,6 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     }
     
     private Map<String, String> mongoCollections = new HashMap<>();
-    
     {
     	mongoCollections.put("BillingAccount", "billing-accounts");
     	mongoCollections.put("AddOns", "addons");
@@ -158,16 +157,16 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     	mongoCollections.put("FreeDataUsage", "free-data-usage");
     	mongoCollections.put("InlifeRecommendations", "inlife-recommendations");
     	mongoCollections.put("LoyaltyStamp", "loyalty-stamps");
-    	
-    	
-    	
-    	
-    	
-    	
-    	
-    	// Dave's additions
-    	
-    	
+    	mongoCollections.put("ExtraCharges", "extra-charges");
+    	mongoCollections.put("PacksAvailable", "packs-available");
+    	mongoCollections.put("Packs", "packs");
+    	mongoCollections.put("Payments", "payments");
+    	mongoCollections.put("Person", "person-identities");
+//    	mongoCollections.put("??", "person-credentials");
+    	mongoCollections.put("PrepayCredit", "prepay-credit");
+    	mongoCollections.put("PrepayUsageItems", "prepay-usage-items");
+    	mongoCollections.put("Rollover", "rollover");
+    	mongoCollections.put("OrderBasket", "orders");
 //    	mongoCollections.put("??", "credit-cards"); 
     	mongoCollections.put("Rollover", "rollover");
 //    	mongoCollections.put("SecurityQuestionAssociation", "security-answers");
