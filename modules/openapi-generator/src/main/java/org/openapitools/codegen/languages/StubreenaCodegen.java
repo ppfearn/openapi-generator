@@ -248,6 +248,8 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     	modelClassMappings.put("MobileSubscriptionPerson", "MobileSubscription");
     	modelClassMappings.put("MobileSubscriptionBilling", "MobileSubscription");
     	modelClassMappings.put("BillingAccountPerson", "BillingAccount");
+    	modelClassMappings.put("BillSummary", "BillSummaryContainer");
+    	
     }
     
     
@@ -931,17 +933,6 @@ public class StubreenaCodegen extends AbstractJavaCodegen
             }
         }
         
-        for (CodegenProperty codegenProperty : model.getVars()) {
-			if ("Link".equals(codegenProperty.complexType)) {
-				model.vendorExtensions.put("x-is-link-container", true);
-				break;
-			}
-			
-			if (modelClassMappings.containsKey(codegenProperty.complexType)) {
-				codegenProperty.datatypeWithEnum = codegenProperty.datatypeWithEnum.replace(codegenProperty.complexType, modelClassMappings.get(codegenProperty.complexType));
-				codegenProperty.complexType = modelClassMappings.get(codegenProperty.complexType);
-			}
-		}
     }
 
     @Override
@@ -1018,6 +1009,27 @@ public class StubreenaCodegen extends AbstractJavaCodegen
             		}
             	}
             }
+            
+          for (CodegenProperty codegenProperty : cm.getVars()) {
+  			if ("Link".equals(codegenProperty.complexType)) {
+  				cm.vendorExtensions.put("x-is-link-container", true);
+  			}
+  			
+  			// Check complex generic type eg List<MobileSubscriptionPerson> and change
+  			// generic to any mappings eg the full MobileSubscription if required
+  			if (modelClassMappings.containsKey(codegenProperty.complexType)) {
+  				codegenProperty.datatypeWithEnum = codegenProperty.datatypeWithEnum.replace(codegenProperty.complexType, modelClassMappings.get(codegenProperty.complexType));
+  				codegenProperty.complexType = modelClassMappings.get(codegenProperty.complexType);
+  			}
+  			
+  			// Check simple properties eg BillSummary and change the referenced type
+  			// to any mappings eg the full BillSummaryContainer if required
+  			if (modelClassMappings.containsKey(codegenProperty.datatypeWithEnum)) {
+  				codegenProperty.datatypeWithEnum = modelClassMappings.get(codegenProperty.datatypeWithEnum);
+  				codegenProperty.baseType = modelClassMappings.get(codegenProperty.baseType);
+  			}
+  		}
+            
         }
         
         try {
@@ -1048,7 +1060,6 @@ public class StubreenaCodegen extends AbstractJavaCodegen
                 	MongoProperty mongoProperty = new MongoProperty();
             		mongoProperty.accountType = (String)operation.vendorExtensions.get("x-account-type");
             		mongoProperty.name = operation.returnType;
-//            		System.out.println("Adding mongoProperty: " + mongoProperty.name + " for ops: " +  tagName);
             		if (!existingMongoProperties.contains(mongoProperty)) {
             			existingMongoProperties.add(mongoProperty);
             		}
@@ -1059,7 +1070,7 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     }
 
 	private void addMongoProperty(MongoProperty mongoProperty, CodegenModel cm) {
-		if (mongoProperty.name == null || mongoProperty.name.length() == 0) {
+		if (mongoProperty.name == null || mongoProperty.name.length() == 0 || mongoProperty.name.equals(cm.name)) {
 			return;
 		}
 		CodegenProperty property = new CodegenProperty();
