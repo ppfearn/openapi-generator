@@ -136,6 +136,32 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     
     {
     	mongoCollections.put("BillingAccount", "billing-accounts");
+    	mongoCollections.put("AddOns", "addons");
+    	mongoCollections.put("AllowancesData", "allowances-data");
+    	mongoCollections.put("AllowancesPrepay", "allowances-prepay");
+    	mongoCollections.put("AllowancesPostpay", "allowances-postpay");
+    	mongoCollections.put("AtpInlifeEligibility", "atp-inlife-eligibility");
+    	mongoCollections.put("AddOnsAvailable", "add-ons-available");
+    	mongoCollections.put("AvailableBoosts", "boosts-available");
+    	mongoCollections.put("Benefits", "benefits");
+    	mongoCollections.put("InsideAllowanceItemsBilled", "billed-inside-allowance-items");
+    	mongoCollections.put("InsideAllowanceSummariesBilled", "billed-inside-allowance-summaries");
+    	mongoCollections.put("OutsideAllowanceItemsBilled", "billed-outside-allowance-items");
+    	mongoCollections.put("OutsideAllowanceSummariesBilled", "billed-outside-allowance-summaries");
+    	mongoCollections.put("Bills", "bills");
+    	mongoCollections.put("BillSummary", "bill-summary");
+    	mongoCollections.put("Boosts", "boosts");
+    	mongoCollections.put("ContentLock", "content-lock");
+    	mongoCollections.put("Contract", "contract");
+    	mongoCollections.put("DataGifts", "data-gifts");
+    	mongoCollections.put("Device", "device-used");
+    	mongoCollections.put("FreeDataUsage", "free-data-usage");
+    	mongoCollections.put("InlifeRecommendations", "inlife-recommendations");
+    	mongoCollections.put("LoyaltyStamp", "loyalty-stamps");
+    	
+    	
+    	
+    	
     }
     
     private Map<String, String> apiEndpoints = new HashMap<>();
