@@ -133,6 +133,7 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     }
     
     private Map<String, String> mongoCollections = new HashMap<>();
+    /*
     {
     	mongoCollections.put("BillingAccount", "billing-accounts");
     	mongoCollections.put("AddOns", "addons");
@@ -181,7 +182,15 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     	mongoCollections.put("UnbilledUsage", "unbilled-usage");
     	mongoCollections.put("UpgradeEligibility", "upgrade-eligibility");
     	
+    	// Account Apis either missing or new after first pass
+    	mongoCollections.put("AddlineEligibility", "add-line-eligibility");
+    	mongoCollections.put("Beneficiaries", "beneficiaries");
+    	mongoCollections.put("DataAlert", "data-alert");
+    	mongoCollections.put("PairedDevices", "paired-devices");
+    	
+    	
     }
+    */
     
     private Map<String, String> apiEndpoints = new HashMap<>();
     
@@ -626,7 +635,7 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     @Override
     public Map<String, Object> postProcessOperationsWithModels(Map<String, Object> objs, List<Object> allModels) {
     	// first get mongo properties from operations
-    	addMogoPropertiesFromOperations(objs);
+    	addMongoPropertiesFromOperations(objs);
     	
     	Map<String, Object> operations = (Map<String, Object>) objs.get("operations");
         if (operations != null) {
@@ -945,7 +954,7 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     	return returnObjs;
     }
     
-    private void addMogoPropertiesFromOperations(Map<String, Object> objs) {
+    private void addMongoPropertiesFromOperations(Map<String, Object> objs) {
     	Map<String, Object> operations = (Map<String, Object>) objs.get("operations");
         if (operations != null) {
             List<CodegenOperation> ops = (List<CodegenOperation>) operations.get("operation");
@@ -957,6 +966,10 @@ public class StubreenaCodegen extends AbstractJavaCodegen
                 		existingMongoProperties = new ArrayList<>();
                 		nestedMongoProperties.put(tagName, existingMongoProperties);
                 	}
+//                	System.out.println("Adding: " + operation.returnType + ":" + operation.operationIdOriginal + " to collectionsMap");
+                	mongoCollections.put(operation.returnType,  operation.operationIdOriginal);
+                	
+                	
                 	MongoProperty mongoProperty = new MongoProperty();
             		mongoProperty.accountType = (String)operation.vendorExtensions.get("x-account-type");
             		mongoProperty.name = operation.returnType;
