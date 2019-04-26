@@ -268,6 +268,16 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     private Map<String, String> staticModelsMap = new HashMap<>();
     {
     	staticModelsMap.put("BillSummaryContainer.java", "billSummaryContainer.mustache");
+    	staticModelsMap.put("MongoIdContainer.java", "mongoIdContainer.mustache");
+    	staticModelsMap.put("LinkContainer.java", "linkContainer.mustache");
+    }
+    
+    // renaming any "id" property to something more meaningful as mongo contains "id" resource by default
+	// changing resource, getter, and setter. But not the JsonResource name as this will be passed
+	// back in the response, therefore keeping the API inline without having to change it
+    private Map<String, String> propertyNameMap = new HashMap<>();
+    {
+    	propertyNameMap.put("RecurringTopups.id", "topupId");
     }
     
     private Map<String, List<MongoProperty>> nestedMongoProperties = new HashMap<>();
@@ -1028,6 +1038,15 @@ public class StubreenaCodegen extends AbstractJavaCodegen
   				codegenProperty.datatypeWithEnum = modelClassMappings.get(codegenProperty.datatypeWithEnum);
   				codegenProperty.baseType = modelClassMappings.get(codegenProperty.baseType);
   			}
+  			
+  			if (propertyNameMap.containsKey(cm.classname+"."+codegenProperty.name)) {
+  				// renaming any "id" property to something more meaningful as mongo contains "id" resource by default
+  				// changing resource, getter, and setter. But not the JsonResource name as this will be passed
+  				// back in the response, therefore keeping the API inline without having to change it
+  				codegenProperty.name = propertyNameMap.get(cm.classname+"."+codegenProperty.name);
+  				codegenProperty.setter = "set"+camelize(codegenProperty.name);
+  				codegenProperty.getter = "get"+camelize(codegenProperty.name);
+  			}
   		}
             
         }
@@ -1060,7 +1079,7 @@ public class StubreenaCodegen extends AbstractJavaCodegen
                 	MongoProperty mongoProperty = new MongoProperty();
             		mongoProperty.accountType = (String)operation.vendorExtensions.get("x-account-type");
             		mongoProperty.name = operation.returnType;
-            		if (!existingMongoProperties.contains(mongoProperty)) {
+            		if (!existingMongoProperties.contains(mongoProperty) && !"resource".equalsIgnoreCase(operation.returnType)) {
             			existingMongoProperties.add(mongoProperty);
             		}
                 }
