@@ -488,8 +488,8 @@ public class StubreenaCodegen extends AbstractJavaCodegen
 
         if (!this.interfaceOnly) {
             if (library.equals(SPRING_BOOT)) {
-                supportingFiles.add(new SupportingFile("openapi2SpringBoot.mustache",
-                        (sourceFolder + File.separator + basePackage).replace(".", java.io.File.separator), "OpenAPI2SpringBoot.java"));
+//                supportingFiles.add(new SupportingFile("openapi2SpringBoot.mustache",
+//                        (sourceFolder + File.separator + basePackage).replace(".", java.io.File.separator), "OpenAPI2SpringBoot.java"));
                 supportingFiles.add(new SupportingFile("RFC3339DateFormat.mustache",
                         (sourceFolder + File.separator + basePackage).replace(".", java.io.File.separator), "RFC3339DateFormat.java"));
             }
@@ -514,7 +514,7 @@ public class StubreenaCodegen extends AbstractJavaCodegen
                     this.setSingleContentTypes(true);
                 }
             } else {
-                apiTemplateFiles.put("apiController.mustache", "Controller.java");
+//                apiTemplateFiles.put("apiController.mustache", "Controller.java");
                 supportingFiles.add(new SupportingFile("application.mustache",
                         ("src.main.resources").replace(".", java.io.File.separator), "application.properties"));
                 supportingFiles.add(new SupportingFile("homeController.mustache",
