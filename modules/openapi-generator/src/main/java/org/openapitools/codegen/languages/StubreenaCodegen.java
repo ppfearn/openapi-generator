@@ -249,6 +249,8 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     	modelClassMappings.put("MobileSubscriptionBilling", "MobileSubscription");
     	modelClassMappings.put("BillingAccountPerson", "BillingAccount");
     	modelClassMappings.put("BillSummary", "BillSummaryContainer");
+    	modelClassMappings.put("LocalDate", "String");
+    	modelClassMappings.put("OffsetDateTime", "String");
     	
     }
     
