@@ -270,6 +270,7 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     	staticModelsMap.put("BillSummaryContainer.java", "billSummaryContainer.mustache");
     	staticModelsMap.put("MongoIdContainer.java", "mongoIdContainer.mustache");
     	staticModelsMap.put("LinkContainer.java", "linkContainer.mustache");
+    	staticModelsMap.put("Meta.java", "meta.mustache");
     }
     
     // renaming any "id" property to something more meaningful as mongo contains "id" resource by default
