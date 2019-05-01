@@ -946,6 +946,12 @@ public class StubreenaCodegen extends AbstractJavaCodegen
             }
         }
         
+        // Remove enums as they cause more problems than solve
+        if (property.isEnum) {
+        	property.isEnum = false;
+        	property.datatypeWithEnum = property.dataType;
+        }
+        
     }
 
     @Override
