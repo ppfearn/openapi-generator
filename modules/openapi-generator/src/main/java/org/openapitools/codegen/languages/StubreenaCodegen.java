@@ -262,6 +262,10 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     
     {
     	nestedMongoTypes.add("MobileSubscriptionBilling");
+    	nestedMongoTypes.add("MobileSubscription");
+    	nestedMongoTypes.add("BillingAccountPerson");
+    	nestedMongoTypes.add("BillingAccount");
+    	
     }
     
     // Map of static models that api cannot generate that are specific to subs
@@ -1037,15 +1041,25 @@ public class StubreenaCodegen extends AbstractJavaCodegen
   			// Check complex generic type eg List<MobileSubscriptionPerson> and change
   			// generic to any mappings eg the full MobileSubscription if required
   			if (modelClassMappings.containsKey(codegenProperty.complexType)) {
+//  				System.out.println("Remapping: " + codegenProperty.complexType + " to: " + modelClassMappings.get(codegenProperty.complexType));
   				codegenProperty.datatypeWithEnum = codegenProperty.datatypeWithEnum.replace(codegenProperty.complexType, modelClassMappings.get(codegenProperty.complexType));
   				codegenProperty.complexType = modelClassMappings.get(codegenProperty.complexType);
+  				if (nestedMongoTypes.contains(codegenProperty.complexType)) {
+  					System.out.println("adding x-is-visible-mongo-dbref to property: " + codegenProperty.name + " in model: " + cm.name);
+  					codegenProperty.vendorExtensions.put("x-is-visible-mongo-dbref", true);
+  		        }
   			}
   			
   			// Check simple properties eg BillSummary and change the referenced type
   			// to any mappings eg the full BillSummaryContainer if required
   			if (modelClassMappings.containsKey(codegenProperty.datatypeWithEnum)) {
+//  				System.out.println("Remapping: " + codegenProperty.datatypeWithEnum + " to: " + modelClassMappings.get(codegenProperty.datatypeWithEnum));
   				codegenProperty.datatypeWithEnum = modelClassMappings.get(codegenProperty.datatypeWithEnum);
   				codegenProperty.baseType = modelClassMappings.get(codegenProperty.baseType);
+  				if (nestedMongoTypes.contains(codegenProperty.datatypeWithEnum)) {
+  					System.out.println("adding x-is-visible-mongo-dbref to property: " + codegenProperty.name + " in model: " + cm.name);
+  					codegenProperty.vendorExtensions.put("x-is-visible-mongo-dbref", true);
+  		        }
   			}
   			
   			if (propertyNameMap.containsKey(cm.classname+"."+codegenProperty.name)) {
