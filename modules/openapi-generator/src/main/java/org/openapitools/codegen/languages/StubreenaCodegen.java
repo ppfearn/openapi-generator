@@ -1088,14 +1088,15 @@ public class StubreenaCodegen extends AbstractJavaCodegen
         if (operations != null) {
             List<CodegenOperation> ops = (List<CodegenOperation>) operations.get("operation");
             for (final CodegenOperation operation : ops) {
-                if (operation.httpMethod.equals("GET") && operation.tags.size() > 0) {
+//                if (operation.httpMethod.equals("GET") && operation.tags.size() > 0) {
+            	if (operation.tags.size() > 0) {
                 	String tagName = operation.tags.get(0).getName();
                 	List<MongoProperty> existingMongoProperties = nestedMongoProperties.get(tagName);
                 	if (existingMongoProperties == null) {
                 		existingMongoProperties = new ArrayList<>();
                 		nestedMongoProperties.put(tagName, existingMongoProperties);
                 	}
-//                	System.out.println("Adding: " + operation.returnType + ":" + operation.operationIdOriginal + " to collectionsMap");
+                	System.out.println("Adding: " + operation.returnType + ":" + operation.operationIdOriginal + " to collectionsMap");
                 	mongoCollections.put(operation.returnType,  operation.operationIdOriginal);
                 	
                 	
