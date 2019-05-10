@@ -164,6 +164,7 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     private List<String> exclusionsFromMongoCollections = new ArrayList<>();
     {
     	exclusionsFromMongoCollections.add("BillSummary");
+    	exclusionsFromMongoCollections.add("InsideAllowanceItemsUnbilled");
     }
     
     private Map<String, String> mongoCollections = new HashMap<>();
@@ -249,6 +250,7 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     	modelClassMappings.put("MobileSubscriptionBilling", "MobileSubscription");
     	modelClassMappings.put("BillingAccountPerson", "BillingAccount");
     	modelClassMappings.put("BillSummary", "BillSummaryContainer");
+    	modelClassMappings.put("InsideAllowanceItemsUnbilled", "InsideAllowanceItemsUnbilledContainer");
     	modelClassMappings.put("LocalDate", "String");
     	modelClassMappings.put("OffsetDateTime", "String");
     	
@@ -274,6 +276,7 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     private Map<String, String> staticModelsMap = new HashMap<>();
     {
     	staticModelsMap.put("BillSummaryContainer.java", "billSummaryContainer.mustache");
+    	staticModelsMap.put("InsideAllowanceItemsUnbilledContainer.java", "insideAllowanceItemsUnbilledContainer.mustache");
     	staticModelsMap.put("MongoIdContainer.java", "mongoIdContainer.mustache");
     	staticModelsMap.put("LinkContainer.java", "linkContainer.mustache");
     	staticModelsMap.put("Meta.java", "meta.mustache");
