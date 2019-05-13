@@ -165,6 +165,10 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     {
     	exclusionsFromMongoCollections.add("BillSummary");
     	exclusionsFromMongoCollections.add("InsideAllowanceItemsUnbilled");
+    	exclusionsFromMongoCollections.add("OutsideAllowanceItemsUnbilled");
+    	exclusionsFromMongoCollections.add("InsideAllowanceItemsBilled");
+    	exclusionsFromMongoCollections.add("OutsideAllowanceItemsBilled");
+    	
     }
     
     private Map<String, String> mongoCollections = new HashMap<>();
@@ -252,6 +256,8 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     	modelClassMappings.put("BillSummary", "BillSummaryContainer");
     	modelClassMappings.put("InsideAllowanceItemsUnbilled", "InsideAllowanceItemsUnbilledContainer");
     	modelClassMappings.put("OutsideAllowanceItemsUnbilled", "OutsideAllowanceItemsUnbilledContainer");
+    	modelClassMappings.put("InsideAllowanceItemsBilled", "InsideAllowanceItemsBilledContainer");
+    	modelClassMappings.put("OutsideAllowanceItemsBilled", "OutsideAllowanceItemsBilledContainer");
     	modelClassMappings.put("LocalDate", "String");
     	modelClassMappings.put("OffsetDateTime", "String");
     	
@@ -279,6 +285,8 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     	staticModelsMap.put("BillSummaryContainer.java", "billSummaryContainer.mustache");
     	staticModelsMap.put("InsideAllowanceItemsUnbilledContainer.java", "insideAllowanceItemsUnbilledContainer.mustache");
     	staticModelsMap.put("OutsideAllowanceItemsUnbilledContainer.java", "outsideAllowanceItemsUnbilledContainer.mustache");
+    	staticModelsMap.put("InsideAllowanceItemsBilledContainer.java", "insideAllowanceItemsBilledContainer.mustache");
+    	staticModelsMap.put("OutsideAllowanceItemsBilledContainer.java", "outsideAllowanceItemsBilledContainer.mustache");
     	staticModelsMap.put("MongoIdContainer.java", "mongoIdContainer.mustache");
     	staticModelsMap.put("LinkContainer.java", "linkContainer.mustache");
     	staticModelsMap.put("Meta.java", "meta.mustache");
