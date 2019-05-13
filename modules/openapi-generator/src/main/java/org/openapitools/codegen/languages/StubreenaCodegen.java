@@ -168,6 +168,8 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     	exclusionsFromMongoCollections.add("OutsideAllowanceItemsUnbilled");
     	exclusionsFromMongoCollections.add("InsideAllowanceItemsBilled");
     	exclusionsFromMongoCollections.add("OutsideAllowanceItemsBilled");
+    	exclusionsFromMongoCollections.add("InsideAllowanceSummariesBilled");
+    	exclusionsFromMongoCollections.add("OutsideAllowanceSummariesBilled");
     	
     }
     
@@ -258,6 +260,8 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     	modelClassMappings.put("OutsideAllowanceItemsUnbilled", "OutsideAllowanceItemsUnbilledContainer");
     	modelClassMappings.put("InsideAllowanceItemsBilled", "InsideAllowanceItemsBilledContainer");
     	modelClassMappings.put("OutsideAllowanceItemsBilled", "OutsideAllowanceItemsBilledContainer");
+    	modelClassMappings.put("InsideAllowanceSummariesBilled", "InsideAllowanceSummariesBilledContainer");
+    	modelClassMappings.put("OutsideAllowanceSummariesBilled", "OutsideAllowanceSummariesBilledContainer");
     	modelClassMappings.put("LocalDate", "String");
     	modelClassMappings.put("OffsetDateTime", "String");
     	
@@ -287,6 +291,8 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     	staticModelsMap.put("OutsideAllowanceItemsUnbilledContainer.java", "outsideAllowanceItemsUnbilledContainer.mustache");
     	staticModelsMap.put("InsideAllowanceItemsBilledContainer.java", "insideAllowanceItemsBilledContainer.mustache");
     	staticModelsMap.put("OutsideAllowanceItemsBilledContainer.java", "outsideAllowanceItemsBilledContainer.mustache");
+    	staticModelsMap.put("InsideAllowanceSummariesBilledContainer.java", "insideAllowanceSummariesBilledContainer.mustache");
+    	staticModelsMap.put("OutsideAllowanceSummariesBilledContainer.java", "outsideAllowanceSummariesBilledContainer.mustache");
     	staticModelsMap.put("MongoIdContainer.java", "mongoIdContainer.mustache");
     	staticModelsMap.put("LinkContainer.java", "linkContainer.mustache");
     	staticModelsMap.put("Meta.java", "meta.mustache");
