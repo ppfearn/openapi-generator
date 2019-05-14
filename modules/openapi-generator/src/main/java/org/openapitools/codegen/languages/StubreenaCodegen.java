@@ -174,8 +174,13 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     }
     
     private Map<String, String> mongoCollections = new HashMap<>();
+    {
+    	mongoCollections.put("MsisdnAssociation", "security-question-association");
+    }
     /* These static definitions are not required as they are automatically added when the 
      * The operations are read by a call to the addMongoPropertiesFromOperations method
+     * 
+     * 
     {
     	mongoCollections.put("BillingAccount", "billing-accounts");
     	mongoCollections.put("AddOns", "addons");
@@ -1115,8 +1120,16 @@ public class StubreenaCodegen extends AbstractJavaCodegen
                 		existingMongoProperties = new ArrayList<>();
                 		nestedMongoProperties.put(tagName, existingMongoProperties);
                 	}
-                	System.out.println("Adding: " + operation.returnType + ":" + operation.operationIdOriginal + " to collectionsMap");
-                	mongoCollections.put(operation.returnType,  operation.operationIdOriginal);
+//                	System.out.println("Adding: " + operation.returnType + ":" + operation.operationIdOriginal + " to collectionsMap");
+                	if (mongoCollections.get(operation.returnType) == null ) {
+                		System.out.println("Adding: " + operation.returnType + ":" + operation.operationIdOriginal + " to collectionsMap");
+                		mongoCollections.put(operation.returnType,  operation.operationIdOriginal);
+                	} else {
+                		if (operation.returnType != null) {
+                			System.out.println("IGNORING OPERARTION.RETURNTYPE: " +operation.returnType);
+                		}
+                	}
+                	
                 	
                 	
                 	MongoProperty mongoProperty = new MongoProperty();
