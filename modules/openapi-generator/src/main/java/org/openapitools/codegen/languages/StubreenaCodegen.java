@@ -349,7 +349,9 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     
     private Map<String, List<MongoProperty>> nestedMongoProperties = new HashMap<>();
 
-	private String basePath = "/digital/v1";
+    // NOTE: This will be prepended to all API endpoint paths in generated APIS
+    // It is set to /digital*/ to handle multipe endpoints that have arisen over time eg /digital-P3
+	private String basePath = "/digital*/v1";
     
     public StubreenaCodegen() {
         super();
