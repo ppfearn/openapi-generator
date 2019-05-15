@@ -25,9 +25,11 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
@@ -154,6 +156,40 @@ public class StubreenaCodegen extends AbstractJavaCodegen
 			return true;
 		}
     }
+    
+    static class TransferProperty {
+    	
+		String className;
+    	String propertyName;
+    	
+    	public TransferProperty(String className, String propertyName) {
+			this.className = className;
+			this.propertyName = propertyName;
+		}
+    }
+    
+    // This is a very hacky map to transfer properties from one model to another. This is to
+    // augment the api spec and add properties to models that should probably be shared, but the api
+    // spec does not share them.
+    // A good example is the BillingAccountPerson that is inluded in the Person response has properties
+    // "isHomeBroadband" and "isDefaultAccount" that are not included in the full BillingAccount model
+    // In stubs, we want to have one model for account ie the full BillingAccount and strip out these fields
+    // for the Person/Account responses where appropriate, so we transfer the properties we require from one model
+    // to another. In this case from BillingAccountPerson to BillingAccount - clear as mud!
+    private Map<String, List<TransferProperty>> propertiesTransferMap = new HashMap<>();
+    {
+    	// Transfer from BillingAccountPerson to BillingAccount
+    	List<TransferProperty> propertiesToTransfer = new ArrayList<>();
+    	propertiesToTransfer.add(new TransferProperty("BillingAccountPerson", "isHomeBroadband"));
+    	propertiesToTransfer.add(new TransferProperty("BillingAccountPerson", "isDefaultAccount"));
+    	propertiesTransferMap.put("BillingAccount", propertiesToTransfer);
+    	
+    }
+    
+    // temporary list that gets populated as models a post processed.
+    // If a model is referenced in propertiesTransferMap above, then we get the properties from the model 
+    // and store them here
+    private Map<String, Set<CodegenProperty>> storedPropertiesToTransfer = new HashMap<>();
     
     // Any model in this list will not result in a mongo collection
     // By default any model returned from operations will result in a @Document(collection="xxx") being
@@ -312,6 +348,8 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     }
     
     private Map<String, List<MongoProperty>> nestedMongoProperties = new HashMap<>();
+
+	private String basePath = "/digital/v1";
     
     public StubreenaCodegen() {
         super();
@@ -738,6 +776,7 @@ public class StubreenaCodegen extends AbstractJavaCodegen
         if (operations != null) {
             List<CodegenOperation> ops = (List<CodegenOperation>) operations.get("operation");
             for (final CodegenOperation operation : ops) {
+            	operation.path = basePath  + operation.path;
             	List<CodegenResponse> responses = operation.responses;
                 if (responses != null) {
                     for (final CodegenResponse resp : responses) {
@@ -1057,6 +1096,15 @@ public class StubreenaCodegen extends AbstractJavaCodegen
             	}
             }
             
+            // Store any properties for transfer to another model if configured
+            // in propertiesTransferMap
+            storePropertiesForTransfer(cm);
+            
+            // Transfer any stored properties to model if configured in propertiesTransferMap
+            if (propertiesTransferMap.containsKey(cm.classname)) {
+  				transferProperties(cm, propertiesTransferMap.get(cm.classname));
+  			}
+
           for (CodegenProperty codegenProperty : cm.getVars()) {
   			if ("Link".equals(codegenProperty.complexType)) {
   				cm.vendorExtensions.put("x-is-link-container", true);
@@ -1107,7 +1155,53 @@ public class StubreenaCodegen extends AbstractJavaCodegen
     	return returnObjs;
     }
     
-    private void addMongoPropertiesFromOperations(Map<String, Object> objs) {
+    private void transferProperties(CodegenModel cm, List<TransferProperty> transferProperties) {
+		for (TransferProperty transferProperty : transferProperties) {
+			Set<CodegenProperty> storedProperties = storedPropertiesToTransfer.get(transferProperty.className);
+			if (storedProperties != null) {
+				for (CodegenProperty storedProperty : storedProperties) {
+					if (storedProperty.name.equals(transferProperty.propertyName)) {
+						System.out.println("Copying " + storedProperty.name + " to model: " + cm.classname + " from: " + transferProperty.className);
+						cm.allVars.add(storedProperty);
+						cm.vars.add(storedProperty);
+					}
+				}
+			}
+		}
+		
+	}
+    
+    private void storePropertiesForTransfer(CodegenModel cm) {
+    	List<TransferProperty> properties = new ArrayList<>();
+    	for (Map.Entry<String, List<TransferProperty>> entry : propertiesTransferMap.entrySet()) {
+    		List<TransferProperty> props = entry.getValue();
+    		for (TransferProperty prop : props) {
+    			if (prop.className.equals(cm.classname)) {
+    				properties.add(prop);
+    			}
+    		}
+    	}
+    	
+    	if (properties.size() > 0) {
+    		for (TransferProperty prop : properties) {
+    			Set<CodegenProperty> exisitingStoredProperties = storedPropertiesToTransfer.get(cm.classname);
+    			if (exisitingStoredProperties == null) {
+    				exisitingStoredProperties = new HashSet<>();
+    				storedPropertiesToTransfer.put(cm.classname, exisitingStoredProperties);
+    			}
+    			for (CodegenProperty cgp : cm.allVars) {
+    				if (cgp.name.equals(prop.propertyName)) {
+    					exisitingStoredProperties.add(cgp);
+    				}
+    			}
+    			
+    		}
+    	}
+    }
+    
+    
+
+	private void addMongoPropertiesFromOperations(Map<String, Object> objs) {
     	Map<String, Object> operations = (Map<String, Object>) objs.get("operations");
         if (operations != null) {
             List<CodegenOperation> ops = (List<CodegenOperation>) operations.get("operation");
