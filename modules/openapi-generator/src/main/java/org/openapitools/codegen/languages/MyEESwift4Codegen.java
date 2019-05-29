@@ -942,6 +942,10 @@ public class MyEESwift4Codegen extends DefaultCodegen implements CodegenConfig {
         		operation.vendorExtensions.put("x-is-http-get", true);
         	} else if ("POST".equals(operation.httpMethod)) {
         		operation.vendorExtensions.put("x-is-http-post", true);
+        		if (operation.getHasBodyParam()) {
+        			operation.vendorExtensions.put("x-has-body-post", true);
+//        			System.out.println("XXX op: " + operation.operationId + " has body param");
+        		}
         	}
         	apiReturnModels.add(operation.returnType);
             for (CodegenParameter cp : operation.allParams) {

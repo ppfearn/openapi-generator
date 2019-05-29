@@ -2393,7 +2393,7 @@ public class DefaultCodegen implements CodegenConfig {
         }
 
         addConsumesInfo(operation, op);
-
+        
         if (operation.getResponses() != null && !operation.getResponses().isEmpty()) {
             ApiResponse methodResponse = findMethodResponse(operation.getResponses());
             for (String key : operation.getResponses().keySet()) {
@@ -2498,12 +2498,19 @@ public class DefaultCodegen implements CodegenConfig {
         List<CodegenParameter> optionalParams = new ArrayList<CodegenParameter>();
 
         CodegenParameter bodyParam = null;
+        CodegenParameter formParamAsModel = null;
         RequestBody requestBody = operation.getRequestBody();
         if (requestBody != null) {
             if ("application/x-www-form-urlencoded".equalsIgnoreCase(getContentType(requestBody)) ||
                     "multipart/form-data".equalsIgnoreCase(getContentType(requestBody))) {
                 // process form parameters
                 formParams = fromRequestBodyToFormParameters(requestBody, imports);
+                formParamAsModel = fromRequestBody(requestBody, imports, "");
+                if (formParamAsModel != null) {
+                	op.vendorExtensions.put("x-form-param-model", formParamAsModel.baseType);
+                	op.vendorExtensions.put("x-has-form-param-model", true);
+                }
+                
                 for (CodegenParameter cp : formParams) {
                     postProcessParameter(cp);
                 }
